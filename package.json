@@ -1,0 +1,18 @@
+{
+  "name": "try-bun-build",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/react": "^18.2.12",
+    "@types/react-dom": "^18.2.5",
+    "bun-types": "^0.6.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@sima-land/ui-nucleons": "^45.0.0-alpha.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
