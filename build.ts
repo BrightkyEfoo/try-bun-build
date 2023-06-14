@@ -1,6 +1,6 @@
 await Bun.build({
   target: "bun",
-  entrypoints: ["./index.ts"],
+  entrypoints: ["./index.tsx"],
   outdir: "./dist",
   plugins: [
     {
