@@ -1,12 +1,14 @@
-await Bun.build({
+import compileCSS from "./compile-css";
+
+Bun.build({
   target: "bun",
   entrypoints: ["./index.tsx"],
   outdir: "./dist",
   plugins: [
     {
       name: "assets",
-      async setup(build) {
-        build.onLoad({ filter: /\.(jpg|jpeg|png)$/ }, async (args) => {
+      setup(build) {
+        build.onLoad({ filter: /\.(jpg|jpeg|png)$/ }, (args) => {
           return {
             contents: `export default "${args.path}";`,
             loader: "js",
@@ -15,11 +17,24 @@ await Bun.build({
       },
     },
     {
-      name: "react-svg",
+      name: "react-modules-svg",
       async setup(build) {
         build.onLoad({ filter: /\.svg$/ }, async (args) => {
+
+          const [fs, toReact] = await Promise.all([
+            import("fs"),
+            // @ts-ignore
+            import("svg-to-react"),
+          ]);
+
+          const contents = fs.readFileSync(args.path, "utf8");
+          const res = toReact.convert(contents).toString();
+
           return {
-            contents: `export default () => <svg></svg>;`,
+            contents: `
+            import React from "react"
+            export default ${res}`,
+
             loader: "js",
           };
         });
@@ -28,13 +43,19 @@ await Bun.build({
     {
       name: "css-modules",
       async setup(build) {
-        build.onLoad({ filter: /\.module\.(css|scss)$/ }, async (args) => {
-          return {
-            contents: `export default {}`,
-            loader: "js",
-          };
+        const [sass, fs] = await Promise.all([import("sass"), import("fs")]);
+        build.onLoad({ filter: /\.css$/ }, (args) => {
+          const contents = fs.readFileSync(args.path, "utf8");
+          const isCssModule = args.path.endsWith(".module.css");
+          return compileCSS(contents, args.path, {
+            cssModules: isCssModule,
+          });
+        });
+        build.onLoad({ filter: /\.scss$/ }, (args) => {
+          const result = sass.compile(args.path);
+          return compileCSS(result.css, args.path, {});
         });
       },
     },
   ],
-}).catch(console.error);
+}).catch(console.log);
